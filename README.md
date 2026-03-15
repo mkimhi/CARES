@@ -4,27 +4,21 @@ Context-Aware Resolution Selection (CARES) is a framework for efficiently select
 
 ## Overview
 
-CARES implements two complementary approaches:
+CARES implements a lightweight direct prediction approach using SmolVLM:
 
-### 1. Gate-Based Approach
-A separate classifier (gate) that predicts whether an image contains sufficient visual information to answer a question at native resolution, or if higher resolution is needed. The gate is trained on top of frozen vision encoders:
-- **SigLIP + Text Encoder** (`train_gate_siglip.py`)
-- **Multimodal SigLIP** (`train_gate_multimodal.py`)
-- **Vision-Language Model** (`train_gate_vlm2.py`) - Uses Qwen2.5-VL with intermediate layer features
-
-### 2. SmolVLM Direct Approach
-Trains a lightweight MLP classifier on top of frozen SmolVLM intermediate hidden states to directly predict resolution requirements (`train_smolvlm_gate.py`).
+### SmolVLM Direct Approach
+Trains a lightweight MLP classifier on top of frozen SmolVLM intermediate hidden states to directly predict resolution requirements. This approach:
+- Works with HuggingFaceTB/SmolVLM-256M-Instruct and SmolVLM-500M-Instruct
+- Freezes all model weights, learning only a classification head
+- Supports multiclass (3-class: low/medium/high) and binary classification modes
+- Achieves efficient on-device inference with minimal computational overhead
 
 ## Project Structure
 
 ```
 src/
-├── gates/                      # Gate-based training scripts
-│   ├── train_gate_siglip.py
-│   ├── train_gate_multimodal.py
-│   └── train_gate_vlm2.py
-├── smolvlm/                    # SmolVLM-based approach
-│   └── train_smolvlm_gate.py
+├── smolvlm/                    # SmolVLM training
+│   └── train_smolvlm_gate.py   # Main training script
 ├── data_prep/                  # Data generation and preparation
 │   ├── gen_training_data.py
 │   ├── gen_more_pixels_training_data_qwen.py
@@ -32,11 +26,8 @@ src/
 │   ├── prepare_textvqa.py
 │   ├── create_low_res.py
 │   └── convert_resolution_quality2parquet.py
-├── inference/                  # Inference and evaluation
-│   ├── compute_cares_resolutions_gv_data.py
-│   └── run_cares_on_gv_data.py
 └── utils/                      # Utility functions
-    ├── res_stats2.py
+    ├── res_stats2.py           # Resolution statistics
     ├── confusion.py
     ├── download.py
     ├── valid_res.py
@@ -58,46 +49,52 @@ pip install transformers torch accelerate datasets sklearn safetensors peft trl 
 
 ## Usage
 
-### Training a Gate Classifier
+### Training SmolVLM Gate
 
 ```bash
-# SigLIP-based gate
-python src/gates/train_gate_siglip.py \
-    --out ./checkpoints/gate_siglip \
-    --lr 1e-3 \
-    --bsz 128
-
-# SmolVLM-based gate
+# Basic training with 256M model
 python src/smolvlm/train_smolvlm_gate.py \
     --parquet data/hardness_data.parquet \
     --model_name HuggingFaceTB/SmolVLM-256M-Instruct \
-    --out ./checkpoints/smolvlm_gate
+    --out ./checkpoints/smolvlm_gate \
+    --bsz 64 \
+    --epochs 10 \
+    --lr 1e-4
+
+# With 500M model and binary classification
+python src/smolvlm/train_smolvlm_gate.py \
+    --parquet data/hardness_data.parquet \
+    --model_name HuggingFaceTB/SmolVLM-500M-Instruct \
+    --out ./checkpoints/smolvlm_500m \
+    --binary \
+    --bsz 32
+
+# With feature layer averaging
+python src/smolvlm/train_smolvlm_gate.py \
+    --parquet data/hardness_data.parquet \
+    --feat_layer middle \
+    --feat_window 3 \
+    --out ./checkpoints/smolvlm_averaged
 ```
 
 ### Data Preparation
 
 ```bash
 # Generate training data
-python src/data_prep/gen_training_data.py
+python src/data_prep/gen_training_data.py --input_file data/samples.jsonl
 
 # Prepare existing VQA datasets
 python src/data_prep/prepare_textvqa.py
-```
 
-### Inference
-
-```bash
-# Compute resolution predictions on benchmark data
-python src/inference/compute_cares_resolutions_gv_data.py
+# Analyze training data distribution
+python src/utils/res_stats2.py --input data/training.parquet
 ```
 
 ## Models
 
-### Base Vision Encoders
-- **SigLIP**: google/siglip-so400m-patch14-384
-- **CLIP**: openai/clip-vit-large-patch14
-- **SmolVLM**: HuggingFaceTB/SmolVLM-256M-Instruct, HuggingFaceTB/SmolVLM-500M-Instruct
-- **Qwen**: qwen/qwen-vl
+### Supported SmolVLM Variants
+- **SmolVLM-256M-Instruct**: Lightweight model, good for on-device deployment
+- **SmolVLM-500M-Instruct**: Larger variant with improved accuracy
 
 ### Datasets Used
 - TextVQA

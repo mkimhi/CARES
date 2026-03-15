@@ -16,19 +16,6 @@ pip install pre-commit black flake8 pytest
 
 ## Module Overview
 
-### Gates (`src/gates/`)
-Multiple independent gate implementations that predict whether high-resolution processing is needed:
-
-- **train_gate_siglip.py**: Uses SigLIP (vision) + sentence transformer (text) as features
-- **train_gate_multimodal.py**: Multimodal features from SigLIP
-- **train_gate_vlm2.py**: VLM-based approach using Qwen2.5-VL with intermediate layer features
-
-**Key components:**
-- Custom DataCollator for image + text batching
-- Train/validation split using sklearn
-- Metrics: accuracy, precision, recall, ROC-AUC
-- Supports resume from checkpoint
-
 ### SmolVLM (`src/smolvlm/`)
 Direct prediction using a lightweight model:
 
@@ -53,12 +40,6 @@ Scripts for generating and preparing training data:
 - **create_low_res.py**: Generate low-resolution versions of images
 - **convert_resolution_quality2parquet.py**: Convert data to parquet format
 
-### Inference (`src/inference/`)
-Scripts for running inference and evaluation:
-
-- **compute_cares_resolutions_gv_data.py**: Compute resolution predictions
-- **run_cares_on_gv_data.py**: Run full evaluation pipeline
-
 ### Utilities (`src/utils/`)
 Helper functions and analysis tools:
 
@@ -70,26 +51,6 @@ Helper functions and analysis tools:
 - **valid_res.py**: Validate resolution predictions
 
 ## Common Workflows
-
-### Training a Gate
-
-```bash
-# SigLIP gate with default settings
-python src/gates/train_gate_siglip.py \
-    --out ./checkpoints/gate_siglip
-
-# Custom learning rate and batch size
-python src/gates/train_gate_siglip.py \
-    --out ./checkpoints/gate_custom \
-    --lr 5e-4 \
-    --bsz 64 \
-    --epochs 20
-
-# Resume from checkpoint
-python src/gates/train_gate_siglip.py \
-    --out ./checkpoints/gate_siglip \
-    --resume
-```
 
 ### Training SmolVLM Gate
 
