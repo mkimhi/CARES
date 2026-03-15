@@ -114,18 +114,19 @@ python src/utils/confusion.py --file1 predictions1.json --file2 predictions2.jso
 ## Performance
 
 CARES achieves significant computational savings by:
-- Reducing average resolution processing by X% (check paper for specific numbers)
-- Maintaining question answering accuracy within Y% of full-resolution baselines
+- Reducing average resolution processing by up to 80% 
+- Maintaining question answering accuracy within 1% of full-resolution baselines
 - Supporting multi-resolution inference strategies
 
 ## Citation
 
-[To be added]
-
-## License
-
-[To be specified]
-
-## Contact
-
-For questions or issues, please open an issue on GitHub or contact the authors.
+```
+@misc{kimhi2025carescontextawareresolutionselector,
+      title={CARES: Context-Aware Resolution Selector for VLMs}, 
+      author={Moshe Kimhi and Nimrod Shabtay and Raja Giryes and Chaim Baskin and Eli Schwartz},
+      year={2025},
+      eprint={2510.19496},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+}
+```
