@@ -10,7 +10,7 @@ CARES implements two complementary approaches:
 A separate classifier (gate) that predicts whether an image contains sufficient visual information to answer a question at native resolution, or if higher resolution is needed. The gate is trained on top of frozen vision encoders:
 - **SigLIP + Text Encoder** (`train_gate_siglip.py`)
 - **Multimodal SigLIP** (`train_gate_multimodal.py`)
-- **Vision-Language Models** (`train_gate_vlm.py`, `train_gate_vlm2.py`)
+- **Vision-Language Model** (`train_gate_vlm2.py`) - Uses Qwen2.5-VL with intermediate layer features
 
 ### 2. SmolVLM Direct Approach
 Trains a lightweight MLP classifier on top of frozen SmolVLM intermediate hidden states to directly predict resolution requirements (`train_smolvlm_gate.py`).
@@ -22,7 +22,6 @@ src/
 ├── gates/                      # Gate-based training scripts
 │   ├── train_gate_siglip.py
 │   ├── train_gate_multimodal.py
-│   ├── train_gate_vlm.py
 │   └── train_gate_vlm2.py
 ├── smolvlm/                    # SmolVLM-based approach
 │   └── train_smolvlm_gate.py
@@ -37,7 +36,6 @@ src/
 │   ├── compute_cares_resolutions_gv_data.py
 │   └── run_cares_on_gv_data.py
 └── utils/                      # Utility functions
-    ├── res_stats.py
     ├── res_stats2.py
     ├── confusion.py
     ├── download.py

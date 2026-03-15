@@ -21,8 +21,7 @@ Multiple independent gate implementations that predict whether high-resolution p
 
 - **train_gate_siglip.py**: Uses SigLIP (vision) + sentence transformer (text) as features
 - **train_gate_multimodal.py**: Multimodal features from SigLIP
-- **train_gate_vlm.py**: Features from a full vision-language model
-- **train_gate_vlm2.py**: Alternative VLM-based approach
+- **train_gate_vlm2.py**: VLM-based approach using Qwen2.5-VL with intermediate layer features
 
 **Key components:**
 - Custom DataCollator for image + text batching
@@ -63,7 +62,7 @@ Scripts for running inference and evaluation:
 ### Utilities (`src/utils/`)
 Helper functions and analysis tools:
 
-- **res_stats.py, res_stats2.py**: Resolution statistics and analysis
+- **res_stats2.py**: Resolution statistics and analysis
 - **confusion.py**: Confusion matrix visualization
 - **sft_cares.py**: Supervised fine-tuning utilities
 - **upload_lora.py**: Upload LoRA adapters
@@ -191,7 +190,7 @@ python src/gates/train_gate_siglip.py \
 
 Check resolution statistics:
 ```bash
-python src/utils/res_stats.py --predictions predictions.json
+python src/utils/res_stats2.py --predictions predictions.json
 ```
 
 ## Troubleshooting

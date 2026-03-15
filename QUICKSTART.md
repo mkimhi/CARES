@@ -100,7 +100,7 @@ python src/gates/train_gate_siglip.py --out ./checkpoint --resume
 python src/gates/train_gate_siglip.py --lr 5e-4
 
 # Analyze training distribution
-python src/utils/res_stats.py --input data/training.parquet
+python src/utils/res_stats2.py --input data/training.parquet
 
 # Get confusion matrix
 python src/utils/confusion.py --predictions results.json
@@ -122,7 +122,7 @@ Typical performance on benchmark datasets:
 |---------|----------|
 | Out of memory | Reduce `--bsz` or use `--create_low_res` |
 | Slow training | Use SmolVLM approach instead of gate |
-| Bad results | Check data distribution with `res_stats.py` |
+| Bad results | Check data distribution with `res_stats2.py` |
 | Missing images | Verify paths are absolute or relative from script dir |
 
 ## Next Steps
