@@ -26,17 +26,16 @@ Fine-tuned autoregressive model that directly learns resolution sufficiency:
 
 ```
 src/
-├── smolvlm/                    # SmolVLM classifier approach
-│   └── train_smolvlm_gate.py   # Train classifier on SmolVLM features
-├── granite_sft/                # Granite-Docling autoregressive approach
-│   └── train_granite_sft.py    # Fine-tune Granite with SFT + LoRA
+├── training/
+│   ├── train_smolvlm_gate.py   # SmolVLM classifier on frozen features
+│   └── train_granite_sft.py    # Granite-Docling SFT with LoRA
 └── utils/                      # Utility functions
     ├── res_stats2.py           # Resolution statistics
     ├── confusion.py
     ├── download.py
+    ├── upload_lora.py
     ├── valid_res.py
-    ├── llave_update.py
-    └── upload_lora.py
+    └── llave_update.py
 ```
 
 ## Installation
@@ -56,7 +55,7 @@ pip install transformers torch accelerate datasets sklearn safetensors peft trl 
 
 ```bash
 # Basic training with 256M model
-python src/smolvlm/train_smolvlm_gate.py \
+python src/training/train_smolvlm_gate.py \
     --parquet data/hardness_data.parquet \
     --model_name HuggingFaceTB/SmolVLM-256M-Instruct \
     --out ./checkpoints/smolvlm_gate \
@@ -65,7 +64,7 @@ python src/smolvlm/train_smolvlm_gate.py \
     --lr 1e-4
 
 # With 500M model and binary classification
-python src/smolvlm/train_smolvlm_gate.py \
+python src/training/train_smolvlm_gate.py \
     --parquet data/hardness_data.parquet \
     --model_name HuggingFaceTB/SmolVLM-500M-Instruct \
     --out ./checkpoints/smolvlm_500m \
@@ -77,7 +76,7 @@ python src/smolvlm/train_smolvlm_gate.py \
 
 ```bash
 # Train with SFT and LoRA adapters
-python src/granite_sft/train_granite_sft.py \
+python src/training/train_granite_sft.py \
     --parquet data/hardness_data.parquet \
     --output_dir ./checkpoints/granite_sft \
     --batch_size 32 \

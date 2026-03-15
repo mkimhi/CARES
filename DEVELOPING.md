@@ -16,24 +16,22 @@ pip install pre-commit black flake8 pytest
 
 ## Module Overview
 
-### SmolVLM Classifier (`src/smolvlm/`)
-External classifier on frozen SmolVLM features:
+### Training Scripts (`src/training/`)
 
-- **train_smolvlm_gate.py**: MLP classifier on frozen SmolVLM intermediate representations
-  - Freezes all model weights, learns only classification head
-  - Supports multiclass (default 3: low/medium/high) and binary classification
-  - Configurable feature layer (`--feat_layer`)
-  - Layer window averaging (`--feat_window`)
-  - Fast inference, minimal parameters to train
+**SmolVLM Classifier** - `train_smolvlm_gate.py`
+- MLP classifier on frozen SmolVLM intermediate representations
+- Freezes all model weights, learns only classification head
+- Supports multiclass (default 3: low/medium/high) and binary classification
+- Configurable feature layer (`--feat_layer`)
+- Layer window averaging (`--feat_window`)
+- Fast inference, minimal parameters to train
 
-### Granite-Docling Autoregressive (`src/granite_sft/`)
-Fine-tuned autoregressive model for resolution prediction:
-
-- **train_granite_sft.py**: SFT (Supervised Fine-Tuning) with LoRA adapters
-  - Uses IBM Granite-Docling as base model
-  - End-to-end fine-tuning with LoRA for efficiency
-  - Direct autoregressive prediction of sufficient resolution
-  - Interpretable outputs, easy to integrate into applications
+**Granite-Docling Autoregressive** - `train_granite_sft.py`
+- SFT (Supervised Fine-Tuning) with LoRA adapters
+- Uses IBM Granite-Docling as base model
+- End-to-end fine-tuning with LoRA for efficiency
+- Direct autoregressive prediction of sufficient resolution
+- Interpretable outputs, easy to integrate into applications
 
 ### Utilities (`src/utils/`)
 Helper functions and analysis tools:
@@ -51,20 +49,20 @@ Helper functions and analysis tools:
 
 ```bash
 # 256M model
-python src/smolvlm/train_smolvlm_gate.py \
+python src/training/train_smolvlm_gate.py \
     --parquet data/hardness_data.parquet \
     --model_name HuggingFaceTB/SmolVLM-256M-Instruct \
     --out ./checkpoints/smolvlm_256m
 
 # 500M model with binary classification
-python src/smolvlm/train_smolvlm_gate.py \
+python src/training/train_smolvlm_gate.py \
     --parquet data/hardness_data.parquet \
     --model_name HuggingFaceTB/SmolVLM-500M-Instruct \
     --binary \
     --out ./checkpoints/smolvlm_500m_binary
 
 # With custom feature layer selection
-python src/smolvlm/train_smolvlm_gate.py \
+python src/training/train_smolvlm_gate.py \
     --parquet data/hardness_data.parquet \
     --feat_layer middle \
     --feat_window 3
@@ -74,7 +72,7 @@ python src/smolvlm/train_smolvlm_gate.py \
 
 ```bash
 # Basic SFT training with LoRA
-python src/granite_sft/train_granite_sft.py \
+python src/training/train_granite_sft.py \
     --parquet data/hardness_data.parquet \
     --output_dir ./checkpoints/granite_sft \
     --batch_size 32 \
@@ -82,7 +80,7 @@ python src/granite_sft/train_granite_sft.py \
     --use_lora
 
 # With custom learning rate and warmup
-python src/granite_sft/train_granite_sft.py \
+python src/training/train_granite_sft.py \
     --parquet data/hardness_data.parquet \
     --output_dir ./checkpoints/granite_custom \
     --learning_rate 1e-4 \

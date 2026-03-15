@@ -16,14 +16,14 @@ pip install -r requirements.txt
 # Choose your approach:
 
 # Option 1: SmolVLM Classifier (lightweight, on-device)
-python src/smolvlm/train_smolvlm_gate.py \
+python src/training/train_smolvlm_gate.py \
     --parquet data/training.parquet \
     --model_name HuggingFaceTB/SmolVLM-256M-Instruct \
     --out ./checkpoint_smolvlm \
     --epochs 10
 
 # Option 2: Granite-Docling Autoregressive (production, interpretable)
-python src/granite_sft/train_granite_sft.py \
+python src/training/train_granite_sft.py \
     --parquet data/training.parquet \
     --output_dir ./checkpoint_granite \
     --num_epochs 3 \
@@ -46,8 +46,9 @@ python src/granite_sft/train_granite_sft.py \
 
 ```
 src/
-├── smolvlm/         → train_smolvlm_gate.py (SmolVLM classifier)
-├── granite_sft/     → train_granite_sft.py (Granite-Docling SFT)
+├── training/        → Both training approaches
+│   ├── train_smolvlm_gate.py (SmolVLM classifier)
+│   └── train_granite_sft.py (Granite-Docling SFT)
 └── utils/           → Analysis & utilities (res_stats2, confusion, etc.)
 ```
 
@@ -72,7 +73,7 @@ Returns probability distribution over resolution classes for each image-question
 ```bash
 # Train SmolVLM with 256M model
 # (Requires parquet file with columns: question, mid_path, hard)
-python src/smolvlm/train_smolvlm_gate.py \
+python src/training/train_smolvlm_gate.py \
     --parquet data/training.parquet \
     --model_name HuggingFaceTB/SmolVLM-256M-Instruct \
     --out ./smolvlm_checkpoint \
@@ -88,7 +89,7 @@ python src/utils/res_stats2.py --input data/training.parquet
 ```bash
 # Train Granite with SFT + LoRA
 # (Requires parquet file with columns: question, mid_path, hard)
-python src/granite_sft/train_granite_sft.py \
+python src/training/train_granite_sft.py \
     --parquet data/training.parquet \
     --output_dir ./granite_checkpoint \
     --num_epochs 3 \
@@ -103,18 +104,18 @@ python src/utils/res_stats2.py --input data/training.parquet
 
 ```bash
 # SmolVLM: Resume training from checkpoint
-python src/smolvlm/train_smolvlm_gate.py \
+python src/training/train_smolvlm_gate.py \
     --parquet data/training.parquet \
     --resume \
     --out ./smolvlm_checkpoint
 
 # SmolVLM: Binary classification (instead of 3-class)
-python src/smolvlm/train_smolvlm_gate.py \
+python src/training/train_smolvlm_gate.py \
     --parquet data/training.parquet \
     --binary
 
 # Granite: Fine-tune with custom learning rate
-python src/granite_sft/train_granite_sft.py \
+python src/training/train_granite_sft.py \
     --parquet data/training.parquet \
     --learning_rate 5e-5
 
