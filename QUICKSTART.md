@@ -46,10 +46,9 @@ python src/granite_sft/train_granite_sft.py \
 
 ```
 src/
-├── smolvlm/         → train_smolvlm_gate.py
-├── granite_sft/     → train_granite_sft.py
-├── data_prep/       → Dataset preparation scripts
-└── utils/           → Analysis & utilities
+├── smolvlm/         → train_smolvlm_gate.py (SmolVLM classifier)
+├── granite_sft/     → train_granite_sft.py (Granite-Docling SFT)
+└── utils/           → Analysis & utilities (res_stats2, confusion, etc.)
 ```
 
 ## Key Concepts
@@ -68,14 +67,11 @@ Parquet file with columns:
 ### Gate Output
 Returns probability distribution over resolution classes for each image-question pair.
 
-## Training SmolVLM Classifier in 5 Minutes
+## Training SmolVLM Classifier
 
 ```bash
-# 1. Prepare data
-python src/data_prep/gen_training_data.py \
-    --output data/training.parquet
-
-# 2. Train SmolVLM with 256M model
+# Train SmolVLM with 256M model
+# (Requires parquet file with columns: question, mid_path, hard)
 python src/smolvlm/train_smolvlm_gate.py \
     --parquet data/training.parquet \
     --model_name HuggingFaceTB/SmolVLM-256M-Instruct \
@@ -83,18 +79,15 @@ python src/smolvlm/train_smolvlm_gate.py \
     --epochs 10 \
     --bsz 32
 
-# 3. Analyze results
+# Analyze results
 python src/utils/res_stats2.py --input data/training.parquet
 ```
 
-## Training Granite-Docling SFT in 5 Minutes
+## Training Granite-Docling SFT
 
 ```bash
-# 1. Prepare data (same as above)
-python src/data_prep/gen_training_data.py \
-    --output data/training.parquet
-
-# 2. Train Granite with SFT + LoRA
+# Train Granite with SFT + LoRA
+# (Requires parquet file with columns: question, mid_path, hard)
 python src/granite_sft/train_granite_sft.py \
     --parquet data/training.parquet \
     --output_dir ./granite_checkpoint \
@@ -102,7 +95,7 @@ python src/granite_sft/train_granite_sft.py \
     --batch_size 32 \
     --use_lora
 
-# 3. Analyze results
+# Analyze results
 python src/utils/res_stats2.py --input data/training.parquet
 ```
 
@@ -159,7 +152,7 @@ python src/utils/upload_lora.py --checkpoint ./granite_checkpoint
 ## Next Steps
 
 1. **Read full docs**: See README.md and DEVELOPING.md
-2. **Set up data**: Follow scripts in src/data_prep/
+2. **Prepare training data**: Create parquet with columns: question, mid_path, hard
 3. **Choose approach**: SmolVLM for speed, Granite for production
 4. **Train model**: Run train_smolvlm_gate.py or train_granite_sft.py
 5. **Analyze results**: Use res_stats2.py and confusion.py for evaluation

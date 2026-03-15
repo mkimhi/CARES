@@ -35,16 +35,6 @@ Fine-tuned autoregressive model for resolution prediction:
   - Direct autoregressive prediction of sufficient resolution
   - Interpretable outputs, easy to integrate into applications
 
-### Data Preparation (`src/data_prep/`)
-Scripts for generating and preparing training data:
-
-- **gen_training_data.py**: Main script for creating hardness labels
-- **gen_more_pixels_training_data_qwen.py**: Qwen-specific data generation
-- **prepare_textvqa.py**: Prepare TextVQA dataset
-- **get_training_dist.py**: Analyze distribution of training examples
-- **create_low_res.py**: Generate low-resolution versions of images
-- **convert_resolution_quality2parquet.py**: Convert data to parquet format
-
 ### Utilities (`src/utils/`)
 Helper functions and analysis tools:
 
@@ -99,21 +89,14 @@ python src/granite_sft/train_granite_sft.py \
     --warmup_steps 500
 ```
 
-### Preparing Data
+### Analyzing Results
 
 ```bash
-# Generate training data
-python src/data_prep/gen_training_data.py \
-    --dataset textvqa \
-    --output data/training_data.parquet
+# Check resolution statistics
+python src/utils/res_stats2.py --input data/training.parquet
 
-# Prepare existing dataset
-python src/data_prep/prepare_textvqa.py
-
-# Create low-resolution versions
-python src/data_prep/create_low_res.py \
-    --input data/high_res_images \
-    --output data/low_res_images
+# Compare two prediction sets
+python src/utils/confusion.py --file1 pred1.json --file2 pred2.json
 ```
 
 ## Code Style

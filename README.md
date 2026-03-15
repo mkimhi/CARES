@@ -30,13 +30,6 @@ src/
 │   └── train_smolvlm_gate.py   # Train classifier on SmolVLM features
 ├── granite_sft/                # Granite-Docling autoregressive approach
 │   └── train_granite_sft.py    # Fine-tune Granite with SFT + LoRA
-├── data_prep/                  # Data generation and preparation
-│   ├── gen_training_data.py
-│   ├── gen_more_pixels_training_data_qwen.py
-│   ├── get_training_dist.py
-│   ├── prepare_textvqa.py
-│   ├── create_low_res.py
-│   └── convert_resolution_quality2parquet.py
 └── utils/                      # Utility functions
     ├── res_stats2.py           # Resolution statistics
     ├── confusion.py
@@ -92,17 +85,14 @@ python src/granite_sft/train_granite_sft.py \
     --use_lora
 ```
 
-### Data Preparation
+### Analysis and Utilities
 
 ```bash
-# Generate training data
-python src/data_prep/gen_training_data.py --input_file data/samples.jsonl
-
-# Prepare existing VQA datasets
-python src/data_prep/prepare_textvqa.py
-
 # Analyze training data distribution
 python src/utils/res_stats2.py --input data/training.parquet
+
+# Generate confusion matrix
+python src/utils/confusion.py --file1 predictions1.json --file2 predictions2.json
 ```
 
 ## Models
