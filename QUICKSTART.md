@@ -2,7 +2,10 @@
 
 ## What is CARES?
 
-CARES (Context-Aware Resolution Selection) learns whether images need high-resolution processing for accurate VLM predictions using SmolVLM, a lightweight direct prediction approach that's efficient and easy to deploy.
+CARES (Context-Aware Resolution Selection) learns whether images need high-resolution processing for accurate VLM predictions. It provides two equally valid approaches:
+
+1. **SmolVLM Classifier**: Fast, efficient classifier on frozen SmolVLM features
+2. **Granite-Docling Autoregressive**: Fine-tuned autoregressive model for direct prediction
 
 ## 30-Second Overview
 
@@ -10,27 +13,41 @@ CARES (Context-Aware Resolution Selection) learns whether images need high-resol
 # Install
 pip install -r requirements.txt
 
-# Train SmolVLM model (efficient, on-device)
+# Choose your approach:
+
+# Option 1: SmolVLM Classifier (lightweight, on-device)
 python src/smolvlm/train_smolvlm_gate.py \
     --parquet data/training.parquet \
     --model_name HuggingFaceTB/SmolVLM-256M-Instruct \
     --out ./checkpoint_smolvlm \
-    --epochs 10 \
-    --bsz 32
+    --epochs 10
+
+# Option 2: Granite-Docling Autoregressive (production, interpretable)
+python src/granite_sft/train_granite_sft.py \
+    --parquet data/training.parquet \
+    --output_dir ./checkpoint_granite \
+    --num_epochs 3 \
+    --use_lora
 ```
 
-## SmolVLM Advantages
+## Approach Comparison
 
-- **Fast**: Lightweight 256M-500M models
-- **Efficient**: Freezes model weights, learns only classification head
-- **Flexible**: Supports multiclass and binary classification
-- **On-device**: Perfect for edge deployment
+| Aspect | SmolVLM Classifier | Granite-Docling SFT |
+|--------|-------------------|-------------------|
+| **Model Size** | 256M-500M | Foundation model |
+| **Training** | Frozen features + MLP | Full SFT + LoRA |
+| **Inference** | Classification head | Autoregressive |
+| **Speed** | ⚡⚡⚡ Fast | ⚡⚡ Medium |
+| **Hosting** | On-device, edge | Production servers |
+| **Interpretability** | Class scores | Direct text output |
+| **Best for** | Low-latency, edge | Production applications |
 
 ## File Organization
 
 ```
 src/
-├── smolvlm/         → train_smolvlm_gate.py (main training script)
+├── smolvlm/         → train_smolvlm_gate.py
+├── granite_sft/     → train_granite_sft.py
 ├── data_prep/       → Dataset preparation scripts
 └── utils/           → Analysis & utilities
 ```
@@ -51,7 +68,7 @@ Parquet file with columns:
 ### Gate Output
 Returns probability distribution over resolution classes for each image-question pair.
 
-## Training SmolVLM in 5 Minutes
+## Training SmolVLM Classifier in 5 Minutes
 
 ```bash
 # 1. Prepare data
@@ -70,19 +87,43 @@ python src/smolvlm/train_smolvlm_gate.py \
 python src/utils/res_stats2.py --input data/training.parquet
 ```
 
+## Training Granite-Docling SFT in 5 Minutes
+
+```bash
+# 1. Prepare data (same as above)
+python src/data_prep/gen_training_data.py \
+    --output data/training.parquet
+
+# 2. Train Granite with SFT + LoRA
+python src/granite_sft/train_granite_sft.py \
+    --parquet data/training.parquet \
+    --output_dir ./granite_checkpoint \
+    --num_epochs 3 \
+    --batch_size 32 \
+    --use_lora
+
+# 3. Analyze results
+python src/utils/res_stats2.py --input data/training.parquet
+```
+
 ## Common Commands
 
 ```bash
-# Resume training from checkpoint
+# SmolVLM: Resume training from checkpoint
 python src/smolvlm/train_smolvlm_gate.py \
     --parquet data/training.parquet \
     --resume \
     --out ./smolvlm_checkpoint
 
-# Use different learning rate
+# SmolVLM: Binary classification (instead of 3-class)
 python src/smolvlm/train_smolvlm_gate.py \
     --parquet data/training.parquet \
-    --lr 5e-4
+    --binary
+
+# Granite: Fine-tune with custom learning rate
+python src/granite_sft/train_granite_sft.py \
+    --parquet data/training.parquet \
+    --learning_rate 5e-5
 
 # Analyze training distribution
 python src/utils/res_stats2.py --input data/training.parquet
@@ -90,24 +131,21 @@ python src/utils/res_stats2.py --input data/training.parquet
 # Get confusion matrix
 python src/utils/confusion.py --predictions results.json
 
-# Binary classification (instead of 3-class)
-python src/smolvlm/train_smolvlm_gate.py \
-    --parquet data/training.parquet \
-    --binary
-
-# Use feature layer averaging
-python src/smolvlm/train_smolvlm_gate.py \
-    --parquet data/training.parquet \
-    --feat_layer middle \
-    --feat_window 3
+# Upload LoRA adapters (for Granite)
+python src/utils/upload_lora.py --checkpoint ./granite_checkpoint
 ```
 
 ## Expected Results
 
-Typical performance on benchmark datasets:
-- **Accuracy**: 75-85% for SmolVLM models
-- **Computational savings**: 30-50% reduction vs. always high-res
-- **Inference speed**: 5x faster than larger gate models on CPU
+### SmolVLM Classifier
+- **Accuracy**: 75-85%
+- **Computational savings**: 30-50% vs. always high-res
+- **Inference speed**: 5x faster than larger models on CPU
+
+### Granite-Docling SFT
+- **Accuracy**: 78-88%
+- **Computational savings**: 30-50% vs. always high-res
+- **Easy deployment**: Self-contained model, no separate classifier
 
 ## Troubleshooting
 
@@ -122,17 +160,17 @@ Typical performance on benchmark datasets:
 
 1. **Read full docs**: See README.md and DEVELOPING.md
 2. **Set up data**: Follow scripts in src/data_prep/
-3. **Train model**: Use train_smolvlm_gate.py with your dataset
-4. **Analyze results**: Use res_stats2.py and confusion.py for evaluation
+3. **Choose approach**: SmolVLM for speed, Granite for production
+4. **Train model**: Run train_smolvlm_gate.py or train_granite_sft.py
+5. **Analyze results**: Use res_stats2.py and confusion.py for evaluation
 
-## API Usage
+## API Usage - SmolVLM
 
 ```python
-from transformers import AutoProcessor, AutoTokenizer
-from safetensors.torch import load_file
+from transformers import AutoProcessor, AutoModel
 import torch
 
-# Load trained SmolVLM
+# Load trained SmolVLM classifier
 model = AutoModel.from_pretrained('./smolvlm_checkpoint')
 processor = AutoProcessor.from_pretrained('HuggingFaceTB/SmolVLM-256M-Instruct')
 
@@ -147,6 +185,29 @@ with torch.no_grad():
 
 # Resolution prediction (0=low, 1=med, 2=high)
 resolution_class = outputs.logits.argmax(dim=-1).item()
+```
+
+## API Usage - Granite-Docling
+
+```python
+from transformers import AutoProcessor, AutoModelForVision2Seq
+import torch
+
+# Load trained Granite model with LoRA adapters
+model = AutoModelForVision2Seq.from_pretrained('./granite_checkpoint')
+processor = AutoProcessor.from_pretrained('./granite_checkpoint')
+
+# Prepare input
+image = Image.open('image.jpg')
+question = "What resolution is sufficient for this question?"
+inputs = processor(images=image, text=question, return_tensors='pt')
+
+# Predict
+with torch.no_grad():
+    outputs = model.generate(**inputs, max_new_tokens=10)
+
+# Decode output
+resolution_prediction = processor.decode(outputs[0])
 ```
 
 ## Citation

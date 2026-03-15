@@ -4,21 +4,32 @@ Context-Aware Resolution Selection (CARES) is a framework for efficiently select
 
 ## Overview
 
-CARES implements a lightweight direct prediction approach using SmolVLM:
+CARES provides two complementary approaches:
 
-### SmolVLM Direct Approach
-Trains a lightweight MLP classifier on top of frozen SmolVLM intermediate hidden states to directly predict resolution requirements. This approach:
-- Works with HuggingFaceTB/SmolVLM-256M-Instruct and SmolVLM-500M-Instruct
-- Freezes all model weights, learning only a classification head
-- Supports multiclass (3-class: low/medium/high) and binary classification modes
-- Achieves efficient on-device inference with minimal computational overhead
+### 1. SmolVLM Classifier
+External classifier trained on top of frozen SmolVLM intermediate hidden states:
+- **Model**: HuggingFaceTB/SmolVLM-256M/500M-Instruct
+- **Approach**: MLP classifier on frozen features
+- **Training**: Efficient with minimal parameter updates
+- **Output**: Resolution class prediction (multiclass or binary)
+- **Best for**: Resource-constrained environments, quick inference
+
+### 2. Granite-Docling Autoregressive
+Fine-tuned autoregressive model that directly learns resolution sufficiency:
+- **Model**: IBM Granite-Docling
+- **Approach**: SFT (Supervised Fine-Tuning) with LoRA adapters
+- **Training**: End-to-end model fine-tuning
+- **Output**: Direct autoregressive resolution prediction
+- **Best for**: Production deployments, easy hosting, interpretable outputs
 
 ## Project Structure
 
 ```
 src/
-├── smolvlm/                    # SmolVLM training
-│   └── train_smolvlm_gate.py   # Main training script
+├── smolvlm/                    # SmolVLM classifier approach
+│   └── train_smolvlm_gate.py   # Train classifier on SmolVLM features
+├── granite_sft/                # Granite-Docling autoregressive approach
+│   └── train_granite_sft.py    # Fine-tune Granite with SFT + LoRA
 ├── data_prep/                  # Data generation and preparation
 │   ├── gen_training_data.py
 │   ├── gen_more_pixels_training_data_qwen.py
@@ -32,7 +43,6 @@ src/
     ├── download.py
     ├── valid_res.py
     ├── llave_update.py
-    ├── sft_cares.py
     └── upload_lora.py
 ```
 
@@ -49,7 +59,7 @@ pip install transformers torch accelerate datasets sklearn safetensors peft trl 
 
 ## Usage
 
-### Training SmolVLM Gate
+### Approach 1: SmolVLM Classifier
 
 ```bash
 # Basic training with 256M model
@@ -68,13 +78,18 @@ python src/smolvlm/train_smolvlm_gate.py \
     --out ./checkpoints/smolvlm_500m \
     --binary \
     --bsz 32
+```
 
-# With feature layer averaging
-python src/smolvlm/train_smolvlm_gate.py \
+### Approach 2: Granite-Docling Autoregressive
+
+```bash
+# Train with SFT and LoRA adapters
+python src/granite_sft/train_granite_sft.py \
     --parquet data/hardness_data.parquet \
-    --feat_layer middle \
-    --feat_window 3 \
-    --out ./checkpoints/smolvlm_averaged
+    --output_dir ./checkpoints/granite_sft \
+    --batch_size 32 \
+    --num_epochs 3 \
+    --use_lora
 ```
 
 ### Data Preparation
@@ -92,9 +107,13 @@ python src/utils/res_stats2.py --input data/training.parquet
 
 ## Models
 
-### Supported SmolVLM Variants
+### SmolVLM Classifier
 - **SmolVLM-256M-Instruct**: Lightweight model, good for on-device deployment
 - **SmolVLM-500M-Instruct**: Larger variant with improved accuracy
+
+### Granite-Docling Autoregressive
+- **IBM Granite-Docling**: Foundation model for document understanding
+- **LoRA Adapters**: Efficient parameter-efficient fine-tuning
 
 ### Datasets Used
 - TextVQA
