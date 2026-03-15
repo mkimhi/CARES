@@ -1,0 +1,80 @@
+# Training logs and checkpoints
+gate2/
+gate3/
+gate85/
+gate85_full/
+gate85_full_txtlast/
+gate85_mean/
+gate85_mean_full/
+gate_ckpt/
+gate_smolvlm_mlp/
+gate_qwen/
+gate_smol/
+gate_smol_noLS/
+gate_vlm_qwen/
+gate_vlm_qwen_mid/
+gate_vlm_qwen_mid_85/
+gate_vlm_qwen_intermediate/
+gate_lr1-3b128/
+gate_no_mult/
+gate_text_encoder/
+gate_c3_qwen/
+gate_docling/
+gate_docling_ar/
+gate_docling_tmp/
+
+# Weights and biases logs
+wandb/
+
+# Exported adapters (if local copies)
+exported_adapter/
+
+# Data processing artifacts
+layers/
+tmp/
+tmp2/
+tmp_binary/
+select_crops_docvqa/
+metrics_debug/
+mux3res/
+wave/
+
+# Data files (if large)
+*.jsonl
+*.json
+*.parquet
+*.pkl
+*.pickle
+
+# Image outputs
+*.png
+*.jpg
+*.jpeg
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.env
+.env.local
+*.log
+
+# Cauldron/other data exploration
+cauldron3/
+hme100k_llava/
+docling_ar_res/
